@@ -1,0 +1,27 @@
+! RI-JK Conv def2-SVP def2/JK NormalPrint KeepDens MORead
+
+%moinp "44-5ap-binap-wb97x.gbw"
+
+%maxcore 10500  # Memoria per core in MB
+
+%pal
+  nprocs 16     # Numero di core
+end
+
+%casscf
+  nel 4                 # Numero di elettroni attivi
+  norb 4                # Numero di orbitali attivi
+  nroots 3,3            # Numero di stati: 4 tripletto, 4 singoletto
+  mult 3,1              # Molteplicit<C3><A0> degli stati
+  maxiter 400           # Numero massimo di iterazioni
+  trafostep RI          # Trasformazione degli integrali con RI
+  rel
+    dosoc false          # Calcolo SOC (spin-orbit coupling)
+    printlevel 3        # Livello di stampa dettagliato per SOC
+  end
+  PTMETHOD SC_NEVPT2    #Second-order strongly-contracted NEVPT2
+end
+
+*xyz 0 1
+  *
+  
