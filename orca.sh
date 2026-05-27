@@ -3,8 +3,8 @@
 #SBATCH --output=%x.o%j
 #SBATCH --error=%x.e%j
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=24
-#SBATCH --mem=50G
+#SBATCH --ntasks-per-node=32
+#SBATCH --mem=160G
 #SBATCH --time=00-12:00:00
 #SBATCH --partition=cpu_guest
 #SBATCH --account=g_mmm
@@ -16,7 +16,7 @@ test -n "$SLURM_JOB_NAME" || exit 1
 # Caricamento moduli
 module load gnu8/8.3.0
 module load openmpi4/4.1.1
-module load orca/6.0.1
+module load orca/6.1.1
 
 # Variabili
 JOB_NAME="$SLURM_JOB_NAME"
@@ -49,17 +49,20 @@ cd "${SCRATCH_DIR}" || exit 1
   echo "Shared library path: $LD_LIBRARY_PATH"
 } > "$LOG_FILE"
 
-# Numero CPU
-CPUS="${SLURM_NTASKS}"
-
 # Lancia ORCA
+# Nota: assicurati che nel file .inp ci sia "%pal nprocs 32 end" 
+# per usare effettivamente le CPU richieste a SLURM.
 $(which orca) "${INPUT_FILE}" > "${OUTPUT_FILE}" 2>> "${LOG_FILE}"
 
 # Esegui orca_2mkl (necessita dei file generati da ORCA in SCRATCH)
-if ls *.gbw 1> /dev/null 2>&1; then
-    GBW_FILE=$(ls *.gbw | head -n 1)
-    $(which orca_2mkl) "${GBW_FILE%.gbw}" -molden
-fi
+for gbw_file in *.gbw; do
+    if [ -f "$gbw_file" ]; then
+        BASENAME="${gbw_file%.gbw}"
+        $(which orca_2mkl) "$BASENAME" -molden
+        mv "${BASENAME}.molden.input" "${BASENAME}.molden"
+        break
+    fi
+done
 
 # Copia tutti i risultati in locale
 cp -r "${SCRATCH_DIR}/"* "${LOCAL_DIR}/" 2>/dev/null || true
